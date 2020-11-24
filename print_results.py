@@ -1,8 +1,15 @@
 import json
+import pickle
+import gzip
 
 f = open('sample results.json')
 result = json.load(f)
-#for i in result['episode_rewards']:
-#	print(i)
-print(result)	
+print(result)
+with gzip.open('./data/data.pkl.gzip','rb') as g:
+    data = pickle.load(g)
+sample_size = 0
+for i in range(len(data['state'])):
+    sample_size += len(data['state'][i])
+print("sample size: ", sample_size)
+g.close
 f.close

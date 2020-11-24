@@ -56,7 +56,7 @@ def save_results(episode_rewards):
     results["mean_all_episodes"] = np.array(episode_rewards).mean()
     #results["std_all_episodes"] = np.array(episode_rewards).std()
  
-    fname = "sample results.json"
+    fname = "sample_results.json"
     fh = open(fname, "w")
     json.dump(results, fh)
     print('save completed')
