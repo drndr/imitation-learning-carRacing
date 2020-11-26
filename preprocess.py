@@ -6,20 +6,19 @@ from skimage.color import rgb2gray
 import matplotlib as plt
 
 actions = np.array([
-    [ 0.0, 0.0, 0.0],  # STRAIGHT
-    [ 0.0, 1.0, 0.0],  # ACCELERATE
-    [ 1.0, 0.0, 0.0],  # RIGHT
-    [ 1.0, 0.0, 0.8],  # RIGHT_BRAKE
-    [ 0.0, 0.0, 0.8],  # BRAKE
-    [-1.0, 0.0, 0.8],  # LEFT_BRAKE
-    [-1.0, 0.0, 0.0],  # LEFT
-    [1.0, 1.0, 0.0],   # RIGHT_ACCELERATE
-    [-1.0, 1.0, 0.0]   # LEFT_ACCELERATE
+	[ 0.0, 0.0, 0.0 ],  # STRAIGHT
+	[ 0.0, 1.0, 0.0 ],  # ACCELERATE
+	[ 0.0, 0.0, 0.8 ],  # BRAKE
+	[ 1.0, 0.0, 0.0 ],  # RIGHT
+	[ 1.0, 1.0, 0.0 ],  # RIGHT_ACCELERATE
+	[ 1.0, 0.0, 0.8 ],  # RIGHT_BRAKE
+	[-1.0, 0.0, 0.0 ],  # LEFT
+	[-1.0, 1.0, 0.0 ],  # LEFT_ACCELERATE
+	[-1.0, 0.0, 0.8 ]   # LEFT_BRAKE
 ], dtype=np.float32)
+
 n_actions = len(actions)
-
-
-
+	
 def read_data():
 	with gzip.open('./data/data.pkl.gzip','rb') as f:
 		data = pickle.load(f)
@@ -42,7 +41,6 @@ def preprocess_state(X):
 
 	# Normalize rgb channel
 	X_processed = X_processed / 255.0
-
 	# Convert to grayscale
 	X_processed = rgb2gray(X_processed)
 
@@ -56,7 +54,8 @@ def show_state_as_img(state):
 	img = Image.fromarray(img,'L') # L - grayscale RGB - rgb
 	img.save('sample.png')
 	img.show()
-
+	
+# Should be called in preprocessing, but rn one-hot encode is not used
 def balance_actions(X, y, drop_prob):
     """ Balance samples. Gets hide of a share of the most common action (accelerate) """
     # Enconding of the action accelerate
@@ -82,41 +81,30 @@ def balance_actions(X, y, drop_prob):
 def detect_invalid_actions(actions):
 	pass
 
+# Not used rn, the optimizer does the hot encode
 def one_hot_encode(action_ids):
 	one_hot_labels = np.zeros(action_ids.shape + (n_actions,))
 	for c in range(n_actions):
 		one_hot_labels[action_ids == c, c] = 1.0
-
-
 	return(one_hot_labels)
-
 def one_hot_decode(one_hot_labels):
     """ Returns actions in the environment understandable format"""
     ids = np.argmax(one_hot_labels, axis=1)
     return(actions[ids])
 
 def preprocess_actions(In_actions):
-    """ Returns actions in the one hot encoded format"""
+    """ Returns actions in id format"""
     #detect_invalid_actions(In_actions) #Need this to make sure no invalid actions present
     ids = []
     for action in In_actions:
         id = np.where(np.all(actions==action, axis=1))
         ids.append(id[0][0])
+    return np.array(ids)
 
-    #one hot encode the actions and return
-    return one_hot_encode(np.array(ids))
-
-with gzip.open('./data/data.pkl.gzip','rb') as f:
-	data = pickle.load(f)
-
-c = join_episodes(data['state'])
-c = preprocess_state(c)
-show_state_as_img(c[66])
-print(c.shape)
-act = join_episodes(data["action"])
-print(act.shape)
-hot_encoded = preprocess_actions(act)
-unhot_encoded = one_hot_decode(hot_encoded)
-X, Y = balance_actions(c,hot_encoded, 0.2)
-print(X.shape)
-print(Y.shape)
+def preprocess_data(X,y):
+	# Return preprocessed and balanced states with action labels
+	X = preprocess_state(X)
+	y = preprocess_actions(y)
+	#return balance_actions(X,y,0.5)
+	return X,y
+	
