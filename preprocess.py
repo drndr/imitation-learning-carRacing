@@ -13,8 +13,8 @@ actions = np.array([
     [ 0.0, 0.0, 0.8],  # BRAKE
     [-1.0, 0.0, 0.8],  # LEFT_BRAKE
     [-1.0, 0.0, 0.0],  # LEFT
-	[1.0, 1.0, 0.0],   # RIGHT_ACCELERATE
-	[-1.0, 1.0, 0.0]   # LEFT_ACCELERATE
+    [1.0, 1.0, 0.0],   # RIGHT_ACCELERATE
+    [-1.0, 1.0, 0.0]   # LEFT_ACCELERATE
 ], dtype=np.float32)
 n_actions = len(actions)
 
@@ -57,6 +57,27 @@ def show_state_as_img(state):
 	img.save('sample.png')
 	img.show()
 
+def balance_actions(X, y, drop_prob):
+    """ Balance samples. Gets hide of a share of the most common action (accelerate) """
+    # Enconding of the action accelerate
+    acceler = np.zeros(9)
+    acceler[1] = 1.
+    # Find out what samples are labeled as accelerate
+    is_accel = np.all(y==acceler, axis=1)
+    # Get the index of all other samples (not accelerate)
+    other_actions_index = np.where(np.logical_not(is_accel))
+    # Randomly pick drop some accelerate samples. Probabiliy of dropping is given by drop_prob
+    drop_mask = np.random.rand(len(is_accel)) > drop_prob
+    accel_keep = drop_mask * is_accel
+    # Get the index of accelerate samples that were kept
+    accel_keep_index = np.where(accel_keep)
+    # Put all actions that we want to keep together
+    final_keep = np.squeeze(np.hstack((other_actions_index, accel_keep_index)))
+    final_keep = np.sort(final_keep)
+    X_bal, y_bal = X[final_keep], y[final_keep]
+
+    return X_bal, y_bal
+
 #TODO
 def detect_invalid_actions(actions):
 	pass
@@ -65,19 +86,25 @@ def one_hot_encode(action_ids):
 	one_hot_labels = np.zeros(action_ids.shape + (n_actions,))
 	for c in range(n_actions):
 		one_hot_labels[action_ids == c, c] = 1.0
+
+
 	return(one_hot_labels)
 
 def one_hot_decode(one_hot_labels):
-    return np.argmax(one_hot_labels, axis=1)
+    """ Returns actions in the environment understandable format"""
+    ids = np.argmax(one_hot_labels, axis=1)
+    return(actions[ids])
 
 def preprocess_actions(In_actions):
-	#Convert array format action to Ids
-	detect_invalid_actions(In_actions) #Need this to make sure no invalid actions present
-	ids = []
-	for action in In_actions:
-		id = np.where(np.all(actions==action, axis=1))
-		ids.append(id[0][0])
-	return np.array(ids)
+    """ Returns actions in the one hot encoded format"""
+    #detect_invalid_actions(In_actions) #Need this to make sure no invalid actions present
+    ids = []
+    for action in In_actions:
+        id = np.where(np.all(actions==action, axis=1))
+        ids.append(id[0][0])
+
+    #one hot encode the actions and return
+    return one_hot_encode(np.array(ids))
 
 with gzip.open('./data/data.pkl.gzip','rb') as f:
 	data = pickle.load(f)
@@ -86,8 +113,10 @@ c = join_episodes(data['state'])
 c = preprocess_state(c)
 show_state_as_img(c[66])
 print(c.shape)
-processed_actions = preprocess_actions(data['action'][5])
-hot_encoded = one_hot_encode(processed_actions)
-print(hot_encoded)
+act = join_episodes(data["action"])
+print(act.shape)
+hot_encoded = preprocess_actions(act)
 unhot_encoded = one_hot_decode(hot_encoded)
-print(unhot_encoded)
+X, Y = balance_actions(c,hot_encoded, 0.2)
+print(X.shape)
+print(Y.shape)
