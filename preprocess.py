@@ -37,7 +37,7 @@ def join_episodes(arr,cutoff=50):
 	
 def convert_model2env(id):
 	if id==1:
-		return [ 0.0, 0.6, 0.0 ]
+		return [ 0.0, 0.3, 0.0 ]
 	return actions[id]
 
 def replace_color(old_color, new_color, X):

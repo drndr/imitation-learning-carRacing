@@ -45,6 +45,7 @@ def save_data(data, datasets_dir="./data"):
     data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
     f = gzip.open(data_file,'wb')
     pickle.dump(data, f)
+    f.close()
 
 
 def save_results(episode_rewards):
@@ -60,6 +61,7 @@ def save_results(episode_rewards):
     fh = open(fname, "w")
     json.dump(results, fh)
     print('save completed')
+    fh.close()
 
 
 if __name__ == "__main__":
@@ -82,6 +84,9 @@ if __name__ == "__main__":
     
     # Episode loop
     while True:
+        env.reset()
+        env.viewer.window.on_key_press = key_press
+        env.viewer.window.on_key_release = key_release
         episode_steps = 0
         episode_samples["state"] = []
         episode_samples["action"] = []
@@ -109,6 +114,7 @@ if __name__ == "__main__":
 
             env.render()
             if done or restart: 
+                env.close()
                 break
         
         if not restart:
