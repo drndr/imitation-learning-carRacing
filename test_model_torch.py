@@ -11,7 +11,7 @@ import os
 
 os.environ['CUDA_VISIBLE_DEVICES']='-1'
 
-pretrained_model = './car_racing_19k900e_p20_trained.pth'
+pretrained_model = './car_racing_19k5000e_p90_trained.pth'
 
 print("CUDA Available: ",torch.cuda.is_available())
 device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
