@@ -20,7 +20,7 @@ actions = np.array([
 n_actions = len(actions)
 	
 def read_data():
-	with gzip.open('./data/data.pkl.gzip','rb') as f:
+	with gzip.open('./data/data_19k.pkl.gzip','rb') as f:
 		data = pickle.load(f)
 	X = join_episodes(data['state'])
 	y = join_episodes(data['action'])
