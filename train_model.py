@@ -174,3 +174,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(net.parameters(), lr=0.0001)
 train_net(net,dataloader,5000)
+
+PATH = './5000epoch_base.pth'
+torch.save(model.state_dict(), PATH)
